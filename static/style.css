@@ -1,0 +1,18 @@
+body{
+    background-color: aquamarine;
+    font-size: 1.2em;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+h1{
+    color:yellow;
+    text-shadow: 0.1em 0.1em 0.25em lime;
+    font-size: 4em;
+    font-style: italic;
+}
+
+img{
+    display: block;
+    width: 25%;
+    margin: auto;
+}
