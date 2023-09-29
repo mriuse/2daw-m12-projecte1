@@ -1,13 +1,15 @@
 body{
-    background-color: aquamarine;
+    display: flex;
+    flex-direction: column;
+    color: #28231f;
+    background-color: #f4ece0;
     font-size: 1.2em;
     font-family: Arial, Helvetica, sans-serif;
 }
 
-h1{
-    color:yellow;
-    text-shadow: 0.1em 0.1em 0.25em lime;
-    font-size: 4em;
+header h1{
+    text-shadow: 0.05/em 0.05em teal;
+    font-size: 2em;
     font-style: italic;
 }
 
@@ -15,4 +17,30 @@ img{
     display: block;
     width: 25%;
     margin: auto;
+}
+
+header{
+    flex: 1;
+}
+
+content{
+    flex: 7;
+}
+
+.prod_container{
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow-y: scroll;
+    justify-content: space-around;
+}
+
+.prod_card{
+    display: block;
+    background-color: #e8e1d6;
+    border: solid #00000059 1px;
+    box-shadow: 0.33em 0.33em 0.5em #0000002c;
+    border-radius: 0.66em;
+    width: 25%;
 }
