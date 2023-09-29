@@ -1,0 +1,84 @@
+* {
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+body{
+    display: flex;
+    flex-direction: column;
+    color: #28231f;
+    background-color: #ffffff;
+    font-size: 1em;
+}
+
+content h1{
+    margin: 1em 0em;
+}
+
+h2, h3{
+    margin: 0.5em 0em 0.25em;
+}
+
+.logo{
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    text-shadow: 0.05em 0.05em teal;
+    font-size: 3em;
+    font-style: italic;
+}
+
+img{
+    display: block;
+    width: 25%;
+    margin: auto;
+}
+
+header{
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    padding: 10px 50px;
+}
+
+content{
+    display: flex;
+    flex-direction: inherit;
+    flex: 7;
+    padding: 10px 50px;
+}
+
+.prod_container{
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow-y: scroll;
+    justify-content: space-around;
+    margin-bottom: 1.5em;
+}
+
+.prod_card{
+    display: block;
+    box-shadow: 0.33em 0.33em 1em #dcdcdc;
+    border-radius: 0.66em;
+    width: 25%;
+    padding: 1em;
+    margin-bottom: 1em;
+}
+
+header, .prod_card{
+    border: solid #dcdcdc 1px;
+}
+
+.prod_card, .info_card{
+    box-shadow: 0.33em 0.33em 1em #dcdcdc;
+}
+
+.button{
+    display: block;
+    width: 25%;
+    padding: 0.75em;
+    background-color: #dcdcdc;
+    border: none;
+    border-radius: 0.66em;
+}

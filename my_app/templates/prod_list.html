@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/css/style.css">
+    <title>All products - SecondWind</title>
+</head>
+<body>
+    <header>
+        <h1 class="logo">SecondWind</h1>
+    </header>
+    <content>
+        <h1>All products</h1>
+        <div class="prod_container">
+            <div class="prod_card">
+                <div class="prod_img_cont">
+                    <img src="../static/img/{{item['photo']}}">
+                </div>
+                <h2>{{item['title']}}</h2>
+                <p>{{item['seller_id']}} | Last updated {{item['updated']}}</p>
+                <h3>{{item['price']}}€</h3>
+                <button class="button">See more</button>
+            </div>
+        </div>
+        <button class="button">Add product</button>
+    </content>
+</body>
+</html>
