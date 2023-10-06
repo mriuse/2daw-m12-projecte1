@@ -5,27 +5,27 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css">
     <title>All products - SecondWind</title>
 </head>
 <body>
     <header>
-        <h1 class="logo">SecondWind</h1>
+        <a class="logo" href="/products/list">SecondWind</a>
     </header>
     <content>
         <h1>Product info</h1>
-        {% for item in list %}
-        <div class="prod_img_cont">
-            <img src="../static/img/{{item['photo']}}">
-        </div>
-        <h2>{{item['title']}}</h2>
-        <p>{{item['seller_id']}} | Last updated {{item['updated']}}</p>
-        <h3>{{item['price']}}€</h3>
-                <button class="button">See more</button>
+        <div class="info_card"> 
+            <img class="info_img" src="/static/img/{{info['photo']}}">
+            <div class="info_details">
+                <h2>{{info['title']}}</h2>
+                <p class="last_updated">Created: {{info['created']}} | Last updated: {{info['updated']}}</p>
+                <p>Category: </p>
+                <p>Seller: </p>
+                <h3 class="price">{{info['price']}}€</h3>
+                <a class="button" href="/products/read/{{info['id']}}">Edit product</a>
+                <a class="button" href="/products/read/{{info['id']}}">Delete product</a>
             </div>
-        {% endfor %}
         </div>
-        <button class="button">Add product</button>
     </content>
 </body>
 </html>

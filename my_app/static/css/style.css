@@ -12,6 +12,10 @@ body{
     font-size: 1em;
 }
 
+p{
+    margin-bottom: 0.6em;
+}
+
 content h1{
     margin: 1em 0em;
 }
@@ -22,15 +26,12 @@ h2, h3{
 
 .logo{
     font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    color: #28231f;
     text-shadow: 0.05em 0.05em teal;
+    text-decoration: none;
     font-size: 3em;
+    font-weight: bold;
     font-style: italic;
-}
-
-img{
-    display: block;
-    width: 25%;
-    margin: auto;
 }
 
 header{
@@ -57,28 +58,79 @@ content{
     margin-bottom: 1.5em;
 }
 
-.prod_card{
-    display: block;
-    box-shadow: 0.33em 0.33em 1em #dcdcdc;
-    border-radius: 0.66em;
-    width: 25%;
-    padding: 1em;
-    margin-bottom: 1em;
-}
-
-header, .prod_card{
+header, .prod_card, .info_card{
     border: solid #dcdcdc 1px;
 }
 
 .prod_card, .info_card{
+    display: flex;
     box-shadow: 0.33em 0.33em 1em #dcdcdc;
+    border-radius: 0.66em;
+    overflow: hidden;
+    justify-content: space-between;
+}
+
+.prod_card{
+    flex-direction: column;
+    width: 400px;
+    height: 500px;
+    margin-bottom: 1em;
+}
+
+.prod_card_info{
+    padding: 1em;
+}
+
+.info_card{
+    flex-direction: row;
+    width: 66vw;
+    height: 66vh;
+    align-self: center;
+}
+.info_img{
+    flex: 1;
+    width: 100%;
+    object-fit: cover;
+}
+.info_details{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1em 3em;
+}
+
+.prod_card_img{
+    width: 100%;
+    height: 66%;
+    object-fit: cover;
+}
+
+.last_updated{
+    color: #9e9e9e;
+    font-style: italic;
+}
+
+.price{
+    font-size: 1.8em;
+    margin-bottom: 0.6em;
 }
 
 .button{
     display: block;
-    width: 25%;
+    width: 150px;
     padding: 0.75em;
+    margin-bottom: 1em;
+    color: inherit;
     background-color: #dcdcdc;
     border: none;
     border-radius: 0.66em;
+    align-self: center;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.button:hover{
+    background-color: teal;
+    color: #ffffff;
 }

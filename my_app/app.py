@@ -18,6 +18,13 @@ def init():
 @app.route("/products/list")
 def prod_list():
     with connect_db() as connect:
-        res = connect.execute("SELECT photo, title, seller_id, updated, price FROM products ORDER BY id ASC")
-        list = res.fetchall();
+        query = connect.execute("SELECT id, title, photo, price, updated FROM products ORDER BY id ASC")
+        list = query.fetchall();
     return render_template('prod_list.html', list = list)
+
+@app.route("/products/read/<int:id>")
+def prod_info(id):
+    with connect_db() as connect:
+        query = connect.execute("SELECT title, description, photo, price, category_id, seller_id, created, updated FROM products WHERE id = "+str(id))
+        info = query.fetchone()
+    return render_template('prod_info.html', info = info)
