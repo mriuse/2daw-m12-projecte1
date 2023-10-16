@@ -97,6 +97,7 @@ header, .prod_card, .info_card{
     display: flex;
     flex-direction: column;
     padding: 1em 3em;
+    align-self: center;
 }
 
 .prod_card_img{
@@ -113,6 +114,7 @@ header, .prod_card, .info_card{
 .price{
     font-size: 1.8em;
     margin-bottom: 0.6em;
+    font-weight: bold;
 }
 
 .button{
@@ -127,10 +129,23 @@ header, .prod_card, .info_card{
     align-self: center;
     text-align: center;
     cursor: pointer;
+    font-size: 1em;
     text-decoration: none;
 }
 
 .button:hover{
     background-color: teal;
     color: #ffffff;
+}
+
+.form{
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+    align-self: center;
+    margin-bottom: 1em;
+}
+
+.form *{
+    margin-bottom: 0.25em;
 }

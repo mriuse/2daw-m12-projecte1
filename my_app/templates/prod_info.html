@@ -15,15 +15,15 @@
     <content>
         <h1>Product info</h1>
         <div class="info_card"> 
-            <img class="info_img" src="/static/img/{{info['photo']}}">
+            <img class="info_img" src="/static/uploads/{{info['photo']}}">
             <div class="info_details">
                 <h2>{{info['title']}}</h2>
-                <p class="last_updated">Created: {{info['created']}} | Last updated: {{info['updated']}}</p>
-                <p>Category: </p>
-                <p>Seller: </p>
-                <h3 class="price">{{info['price']}}€</h3>
-                <a class="button" href="/products/read/{{info['id']}}">Edit product</a>
-                <a class="button" href="/products/read/{{info['id']}}">Delete product</a>
+                <p class="last_updated">Created: {{info['created']}}<br>Last updated: {{info['updated']}}</p>
+                <p><i>Category:</i> {{info['category']}}<br><i>Seller:</i> {{info['seller']}}</p>
+                <p>{{info['description']}}</p>
+                <p class="price">{{info['price']}}€</p>
+                <a class="button" href="/products/edit/{{info['id']}}">Edit product</a>
+                <a class="button" href="/products/delete/{{info['id']}}">Delete product</a>
             </div>
         </div>
     </content>

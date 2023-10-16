@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <title>Edit product - SecondWind</title>
+</head>
+<body>
+    <header>
+        <a class="logo" href="/products/list">SecondWind</a>
+    </header>
+    <content>
+        <h1>Edit product</h1>
+        <div class="info_card"> 
+            <div class="info_details">
+                {% with errors = get_flashed_messages() %}
+                    {% if errors %}
+                        <ul class="errors">
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endwith %}
+                {% block body %}{% endblock %}
+                <p>{{info['id']}}</p>
+                <form id="updateform" class="form" method="POST" enctype="multipart/form-data" action="/products/edit/{{info['id']}}">
+                    <label for="name" class="inputlabel"><i>Name</i></label>
+                    <input type="text" class="inputbox" id="name" name="name" value="{{info['title']}}"/>
+                    <label for="desc" class="inputlabel"><i>Description</i></label>
+                    <input type="text" class="inputbox" id="desc" name="desc" value="{{info['description']}}"/>
+                    <label for="image" class="inputlabel"><i>Product image</i></label>
+                    <input type="file" class="inputbox" id="image" name="image"/>
+                    <label for="cat" class="inputlabel"><i>Category</i></label>
+                    <select type="text" class="inputbox" id="cat" name="cat" value="{{info['category_id']}}">
+                    {% for item in cats %}
+                        <option value="{{item['id']}}">{{item['name']}}</option>
+                    {% endfor %}
+                    </select>
+                    <label for="price" class="inputlabel"><i>Price</i></label>
+                    <input type="number" step="0.01" class="inputbox" name="price" value="{{info['price']}}"/>
+                </form>
+                <input type="submit" form="updateform" id="send" class="button" value="Submit">
+            </div>
+        </div>
+    </content>
+</body>
+</html>
