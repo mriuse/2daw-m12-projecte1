@@ -161,5 +161,29 @@ def prod_edit(id:int):
     else:
         # Not found response
         abort(404)
+
+@app.route("/products/delete/<int:id>", methods=["GET", "POST"])
+def prod_delete(id:int):
+    if request.method == "GET":
+        with connect_db() as connect:
+            query = connect.execute("SELECT title FROM products WHERE id = "+str(id))
+            info = query.fetchone()
+        return render_template("prod_delete.html", id = id, info = info)
+    elif request.method == "POST":
+        with connect_db() as connect:
+            query = connect.execute("SELECT 1 FROM products WHERE id = ?", (id,))
+            exists = query.fetchone()
+            if exists:
+                query = connect.execute("DELETE FROM products WHERE id = "+str(id))
+                connect.commit()
+                flash("Successfully removed listing!")
+                return redirect(url_for("prod_list"))
+            else:
+                flash("The specified listing does not exist!")
+                return redirect(url_for("prod_list"))
+    else:
+        # Not found response
+        abort(404)
+
 if __name__ == '__main__':
     app.run()

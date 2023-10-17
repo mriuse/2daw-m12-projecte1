@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <title>Delete product - SecondWind</title>
+</head>
+<body>
+    <header>
+        <a class="logo" href="/products/list">SecondWind</a>
+    </header>
+    <content>
+        <h1>Delete product</h1>
+        <div class="info_card"> 
+            <div class="info_details">
+                {% with errors = get_flashed_messages() %}
+                    {% if errors %}
+                        <ul class="errors">
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endwith %}
+                {% block body %}{% endblock %}
+                <p>Are you sure you want to delete "{{info['title']}}"?</p>
+                <form id="deleteform" class="form" method="POST" action="/products/delete/{{ id }}"></form>
+                <div class="button_container">
+                    <button type="submit" form="deleteform" id="send" class="button">Yes</button>
+                    <a href="/products/read/{{ id }}"><button class="button">No</button></a>
+                </div>
+            </div>
+        </div>
+    </content>
+</body>
+</html>

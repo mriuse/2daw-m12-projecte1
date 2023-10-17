@@ -26,7 +26,6 @@
                     {% endif %}
                 {% endwith %}
                 {% block body %}{% endblock %}
-                <p>{{info['id']}}</p>
                 <form id="updateform" class="form" method="POST" enctype="multipart/form-data" action="/products/edit/{{info['id']}}">
                     <label for="name" class="inputlabel"><i>Name</i></label>
                     <input type="text" class="inputbox" id="name" name="name" value="{{info['title']}}"/>
