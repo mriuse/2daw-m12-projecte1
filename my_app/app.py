@@ -8,7 +8,10 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, UniqueConstraint
 app = Flask(__name__)
 
 # Config
-app.config["UPLOAD_FOLDER"] = os.path.abspath(os.path.join(os.path.dirname(__file__), "static/uploads"))
+basedir = os.path.abspath(os.path.dirname(__file__)) 
+app.config["UPLOAD_FOLDER"] = os.path.join(basedir, "static/uploads")
+app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///" + basedir + "/database.db"
+app.config["SQLALCHEMY_ECHO"] = True
 app.config["ALLOWED_EXTENSIONS"] = {"png", "jpg", "jpeg", "gif"}
 app.config["MAX_CONTENT_LENGTH"] = 2 * 1000 * 1000  # 2MB
 app.config["SECRET_KEY"] = "AaBbCc"
@@ -16,14 +19,16 @@ time_format = "%Y-%m-%d %X"
 
 # Build DB
 Base = declarative_base()
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mydatabase.db'
+
 db = SQLAlchemy(model_class=Base)
+db.init_app(app)
 
 class Category(db.Model):
     __tablename__ = 'categories'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(255), unique=True)
     slug = db.Column(db.String(255), unique=True)
+    user = db.relationship('Product', backref='prod_cat')
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -31,10 +36,10 @@ class User(db.Model):
     name = db.Column(db.String(255), unique=True)
     email = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255))
-    created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now().strftime(time_format))
-    updated = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now().strftime(time_format), onupdate=datetime.datetime.now().strftime(time_format))
+    created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
+    updated = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now(), onupdate=datetime.datetime.now())
 
-    products = db.relationship('Product', backref='user')
+    products = db.relationship('Product', backref='user_prod')
 
 class Product(db.Model):
     __tablename__ = 'products'
@@ -43,113 +48,76 @@ class Product(db.Model):
     description = db.Column(db.Text)
     photo = db.Column(db.String(255))
     price = db.Column(db.DECIMAL(10, 2))
-    category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now().strftime(time_format))
-    updated = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now().strftime(time_format), onupdate=datetime.datetime.now().strftime(time_format))
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
+    updated = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now(), onupdate=datetime.datetime.now())
 
-    category = db.relationship('Category', backref='products')
-    user = db.relationship('User', backref='products')
+    category = db.relationship('Category', backref='cat_prod')
+    user = db.relationship('User', backref='prod_user')
 
 class Order(db.Model):
     __tablename__ = 'orders'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    product_id = db.Column(db.Integer, nullable=False)
-    buyer_id = db.Column(db.Integer, nullable=False)
-    created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now().strftime(time_format))
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    buyer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
 
     __table_args__ = (
         db.UniqueConstraint('product_id', 'buyer_id', name='uc_product_buyer'),
     )
 
-    product = db.relationship('Product', backref='orders')
-    buyer = db.relationship('User', backref='orders')
+    product = db.relationship('Product', backref='prod_order')
+    user = db.relationship('User', backref='user_orders')
 
 class ConfirmedOrder(db.Model):
     __tablename__ = 'confirmed_orders'
-    order_id = db.Column(db.Integer, primary_key=True)
-    created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now().strftime(time_format))
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), primary_key=True)
+    created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
 
-    order = db.relationship('Order', backref='confirmed_order')
+    order = db.relationship('Order', backref='order_conf')
 
-categories = [
-    Category(id=1, name='Electronics', slug='electronics'),
-    Category(id=2, name='Clothing', slug='clothing'),
-    Category(id=3, name='Toys', slug='toys')
-]
+with app.app_context():
+    db.create_all()
 
-users = [
-    User(id=1, name='Joan Pérez', email='joan@example.com', password='contrasenya1'),
-    User(id=2, name='Anna García', email='anna@example.com', password='contrasenya2'),
-    User(id=3, name='Elia Rodríguez', email='elia@example.com', password='contrasenya3')
-]
+    categories = [
+        Category(id=1, name='Electronics', slug='electronics'),
+        Category(id=2, name='Clothing', slug='clothing'),
+        Category(id=3, name='Toys', slug='toys')
+    ]
 
-products = [
-    Product(id=1, title='Mobile phone', description='An old Motorola RAZR flip phone.', photo='telefon.jpg', price=599.99, category_id=1, user_id=1),
-    Product(id=2, title='T-shirt', description='A red DC Shoes cotton T-shirt.', photo='samarreta.jpg', price=19.99, category_id=2, user_id=2),
-    Product(id=3, title='Plush toy', description='A soft plush toy of Wario from "Super Mario Bros".', photo='ninot.jpg', price=9.99, category_id=3, user_id=3)
-]
+    users = [
+        User(id=1, name='Joan Pérez', email='joan@example.com', password='contrasenya1'),
+        User(id=2, name='Anna García', email='anna@example.com', password='contrasenya2'),
+        User(id=3, name='Elia Rodríguez', email='elia@example.com', password='contrasenya3')
+    ]
 
-orders = [
-    Order(id=1, product_id=1, buyer_id=2),
-    Order(id=2, product_id=2, buyer_id=1),
-    Order(id=3, product_id=3, buyer_id=3)
-]
+    products = [
+        Product(id=1, title='Mobile phone', description='An old Motorola RAZR flip phone.', photo='telefon.jpg', price=599.99, category_id=1, user_id=1),
+        Product(id=2, title='T-shirt', description='A red DC Shoes cotton T-shirt.', photo='samarreta.jpg', price=19.99, category_id=2, user_id=2),
+        Product(id=3, title='Plush toy', description='A soft plush toy of Wario from "Super Mario Bros".', photo='ninot.jpg', price=9.99, category_id=3, user_id=3)
+    ]
 
-for product in products:
-    product.category = categories[product.category_id - 1]
-    product.user = users[product.user_id - 1]
+    orders = [
+        Order(id=1, product_id=1, buyer_id=2),
+        Order(id=2, product_id=2, buyer_id=1),
+        Order(id=3, product_id=3, buyer_id=3)
+    ]
 
-for order in orders:
-    order.product = products[order.product_id - 1]
-    order.buyer = users[order.buyer_id - 1]
+    for product in products:
+        product.category = categories[product.category_id - 1]
+        product.user = users[product.user_id - 1]
 
-db.session.add_all(categories)
-db.session.add_all(users)
-db.session.add_all(products)
-db.session.add_all(orders)
+    for order in orders:
+        order.product = products[order.product_id - 1]
+        order.buyer = users[order.buyer_id - 1]
 
-db.session.commit()
+    db.session.add_all(categories)
+    db.session.add_all(users)
+    db.session.add_all(products)
+    db.session.add_all(orders)
 
-
-categories = [
-    Category(id=1, name='Electronics', slug='electronics'),
-    Category(id=2, name='Clothing', slug='clothing'),
-    Category(id=3, name='Toys', slug='toys')
-]
-
-users = [
-    User(id=1, name='Joan Pérez', email='joan@example.com', password='contrasenya1'),
-    User(id=2, name='Anna García', email='anna@example.com', password='contrasenya2'),
-    User(id=3, name='Elia Rodríguez', email='elia@example.com', password='contrasenya3')
-]
-
-products = [
-    Product(id=1, title='Mobile phone', description='An old Motorola RAZR flip phone.', photo='telefon.jpg', price=599.99, category_id=1, seller_id=1),
-    Product(id=2, title='T-shirt', description='A red DC Shoes cotton T-shirt.', photo='samarreta.jpg', price=19.99, category_id=2, seller_id=2),
-    Product(id=3, title='Plush toy', description='A soft plush toy of Wario from "Super Mario Bros".', photo='ninot.jpg', price=9.99, category_id=3, seller_id=3)
-]
-
-orders = [
-    Order(id=1, product_id=1, buyer_id=2),
-    Order(id=2, product_id=2, buyer_id=1),
-    Order(id=3, product_id=3, buyer_id=3)
-]
-
-for product in products:
-    product.category = categories[product.category_id - 1]
-    product.seller = users[product.seller_id - 1]
-
-for order in orders:
-    order.product = products[order.product_id - 1]
-    order.buyer = users[order.buyer_id - 1]
-
-db.session.add_all(categories)
-db.session.add_all(users)
-db.session.add_all(products)
-db.session.add_all(orders)
-
-db.session.commit()
+    db.session.commit()
 
 def get_cats():
     cats = Category.query.with_entities(Category.id, Category.name).all()
@@ -192,12 +160,12 @@ def sql_insert(data, file):
     cat = data["cat"]
     image = file["image"]
     price = data["price"]
-    date = datetime.datetime.now().strftime(time_format).strftime()
+    date = datetime.datetime.now()
     #Save uploaded image
     image.save(os.path.join(app.config['UPLOAD_FOLDER'], image.filename))
 
     # Save data (database insert)
-    product = Product(title = name, description = desc, photo = image.filename, price = price, category_id = cat, seller_id = 1, created=date, updated=date)
+    product = Product(title = name, description = desc, photo = image.filename, price = price, category_id = cat, user_id = 1, created=date, updated=date)
     db.session.add(product)
     db.session.commit()
 
@@ -208,7 +176,7 @@ def sql_replace(data, file, id:int, img:bool):
     cat = data["cat"]
     image = file["image"]
     price = data["price"]
-    date = datetime.datetime.now().strftime(time_format)
+    date = datetime.datetime.now()
     
     # Update data
     product = Product.query.get(id)
@@ -235,8 +203,8 @@ def prod_list():
 @app.route("/products/read/<int:id>")
 def prod_info(id):
     info = (
-        db.session.query(Product.id, Product.title, Product.description, Product.photo, Product.price, Category.name.label("category"), User.name.label("seller"), Product.created, Product.updated)
-        .join(Category, Product.category_id == Category.id).join(User, Product.seller_id == User.id)
+        db.session.query(Product.id, Product.title, Product.description, Product.photo, Product.price, Category.name.label("category"), User.name.label("user"), Product.created, Product.updated)
+        .join(Category, Product.category_id == Category.id).join(User, Product.user_id == User.id)
     ).get(id)
     return render_template("prod_info.html", info = info)
 
