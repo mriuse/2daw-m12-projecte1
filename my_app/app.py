@@ -18,8 +18,11 @@ app.config["SECRET_KEY"] = "AaBbCc"
 time_format = "%Y-%m-%d %X"
 
 # Build DB
+db_file = os.path.join(basedir, "database.db")
+## TEMPORARY FIX - DELETES EVERYTHING ON START, NEEDS FIXING
+if os.path.exists(db_file):
+    os.remove(db_file)
 Base = declarative_base()
-
 db = SQLAlchemy(model_class=Base)
 db.init_app(app)
 
@@ -81,27 +84,27 @@ with app.app_context():
     db.create_all()
 
     categories = [
-        Category(id=1, name='Electronics', slug='electronics'),
-        Category(id=2, name='Clothing', slug='clothing'),
-        Category(id=3, name='Toys', slug='toys')
+        Category(name='Electronics', slug='electronics'),
+        Category(name='Clothing', slug='clothing'),
+        Category(name='Toys', slug='toys')
     ]
 
     users = [
-        User(id=1, name='Joan Pérez', email='joan@example.com', password='contrasenya1'),
-        User(id=2, name='Anna García', email='anna@example.com', password='contrasenya2'),
-        User(id=3, name='Elia Rodríguez', email='elia@example.com', password='contrasenya3')
+        User(name='Joan Pérez', email='joan@example.com', password='contrasenya1'),
+        User(name='Anna García', email='anna@example.com', password='contrasenya2'),
+        User(name='Elia Rodríguez', email='elia@example.com', password='contrasenya3')
     ]
 
     products = [
-        Product(id=1, title='Mobile phone', description='An old Motorola RAZR flip phone.', photo='telefon.jpg', price=599.99, category_id=1, user_id=1),
-        Product(id=2, title='T-shirt', description='A red DC Shoes cotton T-shirt.', photo='samarreta.jpg', price=19.99, category_id=2, user_id=2),
-        Product(id=3, title='Plush toy', description='A soft plush toy of Wario from "Super Mario Bros".', photo='ninot.jpg', price=9.99, category_id=3, user_id=3)
+        Product(title='Mobile phone', description='An old Motorola RAZR flip phone.', photo='telefon.jpg', price=599.99, category_id=1, user_id=1),
+        Product(title='T-shirt', description='A red DC Shoes cotton T-shirt.', photo='samarreta.jpg', price=19.99, category_id=2, user_id=2),
+        Product(title='Plush toy', description='A soft plush toy of Wario from "Super Mario Bros".', photo='ninot.jpg', price=9.99, category_id=3, user_id=3)
     ]
 
     orders = [
-        Order(id=1, product_id=1, buyer_id=2),
-        Order(id=2, product_id=2, buyer_id=1),
-        Order(id=3, product_id=3, buyer_id=3)
+        Order(product_id=1, buyer_id=2),
+        Order(product_id=2, buyer_id=1),
+        Order(product_id=3, buyer_id=3)
     ]
 
     for product in products:
@@ -161,7 +164,7 @@ def sql_insert(data, file):
     image = file["image"]
     price = data["price"]
     date = datetime.datetime.now()
-    #Save uploaded image
+    # Save uploaded image
     image.save(os.path.join(app.config['UPLOAD_FOLDER'], image.filename))
 
     # Save data (database insert)
@@ -182,7 +185,7 @@ def sql_replace(data, file, id:int, img:bool):
     product = Product.query.get(id)
     if product:
         if img:
-            # Guardar la imagen en la carpeta de carga
+            # Save uploaded image
             image = file["image"]
             image.save(os.path.join(app.config['UPLOAD_FOLDER'], image.filename))
             product.title, product.description, product.photo, product.price, product.category_id, product.updated = name, desc, image.filename, price, cat, date
@@ -205,7 +208,7 @@ def prod_info(id):
     info = (
         db.session.query(Product.id, Product.title, Product.description, Product.photo, Product.price, Category.name.label("category"), User.name.label("user"), Product.created, Product.updated)
         .join(Category, Product.category_id == Category.id).join(User, Product.user_id == User.id)
-    ).get(id)
+    ).filter(Product.id == id).first()
     return render_template("prod_info.html", info = info)
 
 @app.route("/products/add", methods=["GET", "POST"])
