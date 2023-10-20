@@ -2,8 +2,6 @@ import os
 import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, Integer, String, Text, DateTime, UniqueConstraint, DECIMAL, ForeignKey
 
 app = Flask(__name__)
 
@@ -11,19 +9,16 @@ app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__)) 
 app.config["UPLOAD_FOLDER"] = os.path.join(basedir, "static/uploads")
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///" + basedir + "/database.db"
-app.config["SQLALCHEMY_ECHO"] = True
 app.config["ALLOWED_EXTENSIONS"] = {"png", "jpg", "jpeg", "gif"}
-app.config["MAX_CONTENT_LENGTH"] = 2 * 1000 * 1000  # 2MB
+
 app.config["SECRET_KEY"] = "AaBbCc"
+app.config["DEBUG"] = True
+FILESIZE = 2 * 1000 * 1000  # 2MB
 time_format = "%Y-%m-%d %X"
 
 # Build DB
 db_file = os.path.join(basedir, "database.db")
-## TEMPORARY FIX - DELETES EVERYTHING ON START, NEEDS FIXING
-if os.path.exists(db_file):
-    os.remove(db_file)
-Base = declarative_base()
-db = SQLAlchemy(model_class=Base)
+db = SQLAlchemy()
 db.init_app(app)
 
 class Category(db.Model):
@@ -42,8 +37,6 @@ class User(db.Model):
     created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
     updated = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now(), onupdate=datetime.datetime.now())
 
-    products = db.relationship('Product', backref='user_prod')
-
 class Product(db.Model):
     __tablename__ = 'products'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -52,75 +45,9 @@ class Product(db.Model):
     photo = db.Column(db.String(255))
     price = db.Column(db.DECIMAL(10, 2))
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    seller_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
     updated = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now(), onupdate=datetime.datetime.now())
-
-    category = db.relationship('Category', backref='cat_prod')
-    user = db.relationship('User', backref='prod_user')
-
-class Order(db.Model):
-    __tablename__ = 'orders'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
-    buyer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
-
-    __table_args__ = (
-        db.UniqueConstraint('product_id', 'buyer_id', name='uc_product_buyer'),
-    )
-
-    product = db.relationship('Product', backref='prod_order')
-    user = db.relationship('User', backref='user_orders')
-
-class ConfirmedOrder(db.Model):
-    __tablename__ = 'confirmed_orders'
-    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), primary_key=True)
-    created = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now())
-
-    order = db.relationship('Order', backref='order_conf')
-
-with app.app_context():
-    db.create_all()
-
-    categories = [
-        Category(name='Electronics', slug='electronics'),
-        Category(name='Clothing', slug='clothing'),
-        Category(name='Toys', slug='toys')
-    ]
-
-    users = [
-        User(name='Joan Pérez', email='joan@example.com', password='contrasenya1'),
-        User(name='Anna García', email='anna@example.com', password='contrasenya2'),
-        User(name='Elia Rodríguez', email='elia@example.com', password='contrasenya3')
-    ]
-
-    products = [
-        Product(title='Mobile phone', description='An old Motorola RAZR flip phone.', photo='telefon.jpg', price=599.99, category_id=1, user_id=1),
-        Product(title='T-shirt', description='A red DC Shoes cotton T-shirt.', photo='samarreta.jpg', price=19.99, category_id=2, user_id=2),
-        Product(title='Plush toy', description='A soft plush toy of Wario from "Super Mario Bros".', photo='ninot.jpg', price=9.99, category_id=3, user_id=3)
-    ]
-
-    orders = [
-        Order(product_id=1, buyer_id=2),
-        Order(product_id=2, buyer_id=1),
-        Order(product_id=3, buyer_id=3)
-    ]
-
-    for product in products:
-        product.category = categories[product.category_id - 1]
-        product.user = users[product.user_id - 1]
-
-    for order in orders:
-        order.product = products[order.product_id - 1]
-        order.buyer = users[order.buyer_id - 1]
-
-    db.session.add_all(categories)
-    db.session.add_all(users)
-    db.session.add_all(products)
-    db.session.add_all(orders)
-
-    db.session.commit()
 
 def get_cats():
     cats = Category.query.with_entities(Category.id, Category.name).all()
@@ -143,15 +70,15 @@ def validate(data, file, img:bool):
     # Image
     if "image" not in file:
         errors.append("ERROR: File part not submitted")
-    elif img and file["image"].filename:
+    elif img and file["image"].filename == "":
+        errors.append("No product image selected!")
+    elif img:
         if not allowed_file(file["image"].filename):
             errors.append("Unsupported file type!")
-        elif file["image"].content_length > app.config['MAX_CONTENT_LENGTH']:
+        elif file["image"].content_length > FILESIZE:
             errors.append("File must not be bigger than 2MB!")
-    else:
-        errors.append("No product image selected!")
     # Price
-    if not data["price"] == "":
+    if not data["price"]:
         errors.append("Price must not be empty!")
     return errors
 
@@ -168,7 +95,7 @@ def sql_insert(data, file):
     image.save(os.path.join(app.config['UPLOAD_FOLDER'], image.filename))
 
     # Save data (database insert)
-    product = Product(title = name, description = desc, photo = image.filename, price = price, category_id = cat, user_id = 1, created=date, updated=date)
+    product = Product(title = name, description = desc, photo = image.filename, price = price, category_id = cat, seller_id = 1, created=date, updated=date)
     db.session.add(product)
     db.session.commit()
 
@@ -207,7 +134,7 @@ def prod_list():
 def prod_info(id):
     info = (
         db.session.query(Product.id, Product.title, Product.description, Product.photo, Product.price, Category.name.label("category"), User.name.label("user"), Product.created, Product.updated)
-        .join(Category, Product.category_id == Category.id).join(User, Product.user_id == User.id)
+        .join(Category, Product.category_id == Category.id).join(User, Product.seller_id == User.id)
     ).filter(Product.id == id).first()
     return render_template("prod_info.html", info = info)
 
@@ -250,16 +177,16 @@ def prod_edit(id:int):
         # Get POST data
         data = request.form
         file = request.files
-        if file["image"].filename:
-            img = True
-        else:
+        if file["image"].filename == "":
             img = False
+        else:
+            img = True
         # Validate data
         errors = validate(data, file, img)
         if errors:
             for error in errors:
                 flash(error)
-            return redirect(url_for("prod_edit"))
+            return redirect(url_for("prod_edit", id = id))
         else:
             sql_replace(data, file, id, img)
             # Redirect to list page
@@ -274,19 +201,18 @@ def prod_delete(id:int):
     product = Product.query.get(id)
     if request.method == "GET":
         if product:
-            return render_template("prod_delete.html", id = id, info = product.title)
+            return render_template("prod_delete.html", id = id, info = product)
         else:
             flash("The specified listing does not exist!")
             return redirect(url_for("prod_list"))
     elif request.method == "POST":
-        with connect_db() as connect:
-            if product:
-                db.session.delete(product)
-                db.session.commit()
-                flash("Successfully removed listing!")
-            else:
-                flash("The specified listing does not exist!")
-            return redirect(url_for("prod_list"))
+        if product:
+            db.session.delete(product)
+            db.session.commit()
+            flash("Successfully removed listing!")
+        else:
+            flash("The specified listing does not exist!")
+        return redirect(url_for("prod_list"))
     else:
         # Not found response
         abort(404)
